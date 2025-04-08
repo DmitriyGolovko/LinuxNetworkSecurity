@@ -8,14 +8,18 @@
 DATE=$(date +"%Y%m%d%H%M")
 
 DIR=~/.snapps
+SNAPDIR=$DIR/snap
 
 if [ ! -d $DIR ]; then
 	mkdir $DIR
 fi
 
+if [ ! -d $SNAPDIR ]; then
+	mkdir $SNAPDIR
+fi	
+
 function display_help() {
 	echo "Usage: ./snapps.sh (help|snap|view|diff) [id1] [id2]"
-	echo "Dates can be specified as if you are using \"date -d [...]\""
 	echo ""
 	echo "Description: Take snapshots of processes to compare at a later time."
 	echo ""
@@ -28,9 +32,7 @@ function display_help() {
 
 function create_snap() {
 	#Get all commands that are running
-	ps -e | egrep -o "(\w|[-:\/_\(\)])*$" 1> $DIR/$DATE 2>> $DIR/error.log
-
-	echo "Created snap."
+	ps -e | egrep -o "(\w|[-:\/_\(\)])*$" 1> $SNAPDIR/$DATE 2>> $DIR/error.log
 }
 
 #Create a readable list of snaps with associated id and process count.
@@ -41,13 +43,13 @@ function list_snaps() {
 	echo -e "ID\tDate\t\t\t\tProcesses" >> $DIR/view
 	ID=0
 
-	ls $DIR | grep -o "[1234567890]*" | sort | while IFS= read -r line; do
+	ls $SNAPDIR | grep -o "[1234567890]*" | sort | while IFS= read -r line; do
 		#Formatting so the date command can interpreted.
 		FDATE=$(echo $line | sed "s/^\(.\{8\}\)/\1 /")
 
 		echo -e "$ID\t\c" >> $DIR/view
 		echo -e "$(date -d "$FDATE")\t\c" >> $DIR/view
-		echo -e "$(cat $DIR/$line | wc -l)" >> $DIR/view
+		echo -e "$(cat $SNAPDIR/$line | wc -l)" >> $DIR/view
 
 		ID=$(expr $ID + 1)
 	done
@@ -58,19 +60,22 @@ function list_snaps() {
 }
 
 function view_snap() {
+	#History will be stored in $DIR/view
 	list_snaps	
 
 	if [ "$(echo $1 | grep -o "[1234567890]*")" = "" ]; then
-		echo "Error: Invalid ID."
+		echo $(whoami) $(date) Error: Invalid ID. >> $DIR/error.log
 		exit 1
 	fi
 	
-	LINE=$(cat $DIR/view | grep $1)
+	LINE=$(cat $DIR/view | grep "^$1")
 
 	if [ "$LINE" = "" ]; then
-		echo "Error: Could not find associated ID."
+		echo $(whoami) $(date) Error: Could not find associated ID. >> $DIR/error.log
 		exit 1
 	fi
+
+	echo $LINE
 }
 
 
@@ -93,7 +98,7 @@ case $1 in
 	view_diff $2 $3
 	;;
 * )
-	echo "Invalid Command"
+	echo $(whoami) $(date) Error: Invalid Command: $1 >> $DIR/error.log 
 	display_help
 	;;
 esac
