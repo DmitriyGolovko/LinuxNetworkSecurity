@@ -89,6 +89,16 @@ function view_snap() {
 	fi
 }
 
+#Find differene between 2 snap files given by arg1=id1, arg2=id2
+function find_difference() {
+	view_snap $1
+	cat $DIR/prev | sort | uniq -c | sort > $DIR/snap1
+	view_snap $2
+	cat $DIR/prev | sort | uniq -c | sort > $DIR/snap2
+
+	diff $DIR/snap1 $DIR/snap2	
+}
+
 
 
 case $1 in
@@ -106,7 +116,7 @@ case $1 in
 	fi
 	;;
 "diff" | "diff" ) 
-	view_diff $2 $3
+	find_difference $2 $3
 	;;
 * )
 	error_log "Invalid-Command"
