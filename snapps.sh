@@ -16,7 +16,12 @@ fi
 
 if [ ! -d $SNAPDIR ]; then
 	mkdir $SNAPDIR
-fi	
+fi
+
+function error_log() {
+	echo "$(whoami) $(date) Error: $1" >> $DIR/error.log
+	echo $1
+}	
 
 function display_help() {
 	echo "Usage: ./snapps.sh (help|snap|view|diff) [id1] [id2]"
@@ -59,23 +64,29 @@ function list_snaps() {
 	fi
 }
 
+#Read snap given by arg1=ID. If arg2=1 then output to stdout.
 function view_snap() {
 	#History will be stored in $DIR/view
 	list_snaps	
 
 	if [ "$(echo $1 | grep -o "[1234567890]*")" = "" ]; then
-		echo $(whoami) $(date) Error: Invalid ID. >> $DIR/error.log
+		error_log "Invalid-ID"
 		exit 1
 	fi
 	
 	LINE=$(cat $DIR/view | grep "^$1")
 
 	if [ "$LINE" = "" ]; then
-		echo $(whoami) $(date) Error: Could not find associated ID. >> $DIR/error.log
+		error_log "ID-Does-Not-Exist"
 		exit 1
 	fi
-
-	echo $LINE
+	
+	#Read particular line using head | tail method
+	cat $SNAPDIR/$(ls $SNAPDIR | sort | head -$(expr $1 + 1) | tail -1) > $DIR/prev
+	
+	if [ "$2" = "1" ]; then
+		cat $DIR/prev
+	fi
 }
 
 
@@ -91,14 +102,14 @@ case $1 in
 	if [ "$2" = "" ]; then
 		list_snaps 1
 	else
-		view_snap $2
+		view_snap $2 1
 	fi
 	;;
 "diff" | "diff" ) 
 	view_diff $2 $3
 	;;
 * )
-	echo $(whoami) $(date) Error: Invalid Command: $1 >> $DIR/error.log 
+	error_log "Invalid-Command"
 	display_help
 	;;
 esac
