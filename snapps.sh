@@ -33,26 +33,43 @@ function create_snap() {
 	echo "Created snap."
 }
 
+#Create a readable list of snaps with associated id and process count.
+#If 1 is passed, will display view to stdout.
+#All calculated data is stored in $DIR/view.
 function list_snaps() {
-	echo "Snaps created at:"
+	echo "Snaps" > $DIR/view
+	echo -e "ID\tDate\t\t\t\tProcesses" >> $DIR/view
 	ID=0
+
 	ls $DIR | grep -o "[1234567890]*" | sort | while IFS= read -r line; do
 		#Formatting so the date command can interpreted.
 		FDATE=$(echo $line | sed "s/^\(.\{8\}\)/\1 /")
-		echo -e "$ID\t\c"
-		echo $(date -d "$FDATE")
+
+		echo -e "$ID\t\c" >> $DIR/view
+		echo -e "$(date -d "$FDATE")\t\c" >> $DIR/view
+		echo -e "$(cat $DIR/$line | wc -l)" >> $DIR/view
 
 		ID=$(expr $ID + 1)
 	done
+
+	if [ "$1" = "1" ]; then
+		cat $DIR/view
+	fi
 }
 
 function view_snap() {
-	ID=$(date -d "$1" +"%Y%m%d%H%M")
-	if [ -f $DIR/$ID ]; then
-		echo Viewing snap from $(date -d "$1")
-		cat $DIR/$ID
-	else
-		echo Could not find file $ID
+	list_snaps	
+
+	if [ "$(echo $1 | grep -o "[1234567890]*")" = "" ]; then
+		echo "Error: Invalid ID."
+		exit 1
+	fi
+	
+	LINE=$(cat $DIR/view | grep $1)
+
+	if [ "$LINE" = "" ]; then
+		echo "Error: Could not find associated ID."
+		exit 1
 	fi
 }
 
@@ -67,13 +84,17 @@ case $1 in
 	;;
 "view" | "VIEW" ) 
 	if [ "$2" = "" ]; then
-		list_snaps
+		list_snaps 1
 	else
 		view_snap $2
 	fi
 	;;
-"diff" | "diff" ) view_diff $2 $3
+"diff" | "diff" ) 
+	view_diff $2 $3
+	;;
+* )
+	echo "Invalid Command"
+	display_help
 	;;
 esac
 
-#ps -e | egrep -o "(\w|[-:\/_\(\)])*$"
