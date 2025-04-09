@@ -9,6 +9,7 @@ DATE=$(date +"%Y%m%d%H%M")
 
 DIR=~/.snapps
 SNAPDIR=$DIR/snap
+WK=/tmp/snapps
 
 if [ ! -d $DIR ]; then
 	mkdir $DIR
@@ -16,6 +17,10 @@ fi
 
 if [ ! -d $SNAPDIR ]; then
 	mkdir $SNAPDIR
+fi
+
+if [ ! -d $WK ]; then
+	mkdir $WK
 fi
 
 function error_log() {
@@ -44,23 +49,23 @@ function create_snap() {
 #If 1 is passed, will display view to stdout.
 #All calculated data is stored in $DIR/view.
 function list_snaps() {
-	echo "Snaps" > $DIR/view
-	echo -e "ID\tDate\t\t\t\tProcesses" >> $DIR/view
+	echo "Snaps" > $WK/view
+	echo -e "ID\tDate\t\t\t\tProcesses" >> $WK/view
 	ID=0
 
 	ls $SNAPDIR | grep -o "[1234567890]*" | sort | while IFS= read -r line; do
 		#Formatting so the date command can interpreted.
 		FDATE=$(echo $line | sed "s/^\(.\{8\}\)/\1 /")
 
-		echo -e "$ID\t\c" >> $DIR/view
-		echo -e "$(date -d "$FDATE")\t\c" >> $DIR/view
-		echo -e "$(cat $SNAPDIR/$line | wc -l)" >> $DIR/view
+		echo -e "$ID\t\c" >> $WK/view
+		echo -e "$(date -d "$FDATE")\t\c" >> $WK/view
+		echo -e "$(cat $SNAPDIR/$line | wc -l)" >> $WK/view
 
 		ID=$(expr $ID + 1)
 	done
 
 	if [ "$1" = "1" ]; then
-		cat $DIR/view
+		cat $WK/view
 	fi
 }
 
@@ -74,7 +79,7 @@ function view_snap() {
 		exit 1
 	fi
 	
-	LINE=$(cat $DIR/view | grep "^$1")
+	LINE=$(cat $WK/view | grep "^$1")
 
 	if [ "$LINE" = "" ]; then
 		error_log "ID-Does-Not-Exist"
@@ -82,10 +87,10 @@ function view_snap() {
 	fi
 	
 	#Read particular line using head | tail method
-	cat $SNAPDIR/$(ls $SNAPDIR | sort | head -$(expr $1 + 1) | tail -1) > $DIR/prev
+	cat $SNAPDIR/$(ls $SNAPDIR | sort | head -$(expr $1 + 1) | tail -1) > $WK/prev
 	
 	if [ "$2" = "1" ]; then
-		cat $DIR/prev
+		cat $WK/prev
 	fi
 }
 
