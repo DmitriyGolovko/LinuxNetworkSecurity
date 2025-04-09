@@ -40,9 +40,17 @@ function display_help() {
 	echo -e "diff [id1] [id2]\tCompare snaps from now to latest snap.\n\t\t\tIf first argument given only, compare date to current processes.\n\t\t\tIf both arguments are given, compare snaps of both dates."
 }
 
+#Create snapshot of processes
+#If arg1=1 store the snap in snaps
 function create_snap() {
 	#Get all commands that are running
-	ps -e | egrep -o "(\w|[-:\/_\(\)])*$" 1> $SNAPDIR/$DATE 2>> $DIR/error.log
+	ps -e | egrep -o "(\w|[-:\/_\(\)])*$" 1> $WK/last_snap 2>> $DIR/error.log
+	WC=$(cat $WK/last_snap | wc -l)
+	cat $WK/last_snap | tail -$(expr $WC - 1) > $WK/last_snap
+	
+	if [ "$1" = "1" ]; then
+		cp $WK/last_snap $SNAPDIR/$DATE
+	fi 
 }
 
 #Create a readable list of snaps with associated id and process count.
@@ -69,10 +77,14 @@ function list_snaps() {
 	fi
 }
 
-#Read snap given by arg1=ID. If arg2=1 then output to stdout.
+#Read snap given by arg1=ID.
+#If arg2=1 then output to stdout.
+#If arg3=1 then don't invoke list_snaps to update $WK/view 
 function view_snap() {
 	#History will be stored in $DIR/view
-	list_snaps	
+	if [ ! "$3" = 1 ]; then
+		list_snaps
+	fi	
 
 	if [ "$(echo $1 | grep -o "[1234567890]*")" = "" ]; then
 		error_log "Invalid-ID"
@@ -111,7 +123,7 @@ case $1 in
 	display_help
 	;;
 "snap" | "SNAP" ) 
-	create_snap
+	create_snap 1
 	;;
 "view" | "VIEW" ) 
 	if [ "$2" = "" ]; then
