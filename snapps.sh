@@ -107,12 +107,16 @@ function view_snap() {
 
 #Find differene between 2 snap files given by arg1=id1, arg2=id2
 function find_difference() {
-	view_snap $1
-	cat $DIR/prev | sort | uniq -c | sort > $DIR/snap1
-	view_snap $2
-	cat $DIR/prev | sort | uniq -c | sort > $DIR/snap2
+	if [ "$1" = "" ]; then
+	#No arguments given
 
-	diff $DIR/snap1 $DIR/snap2	
+	elif [ "$2" = "" ]; then
+	#First argument given
+
+	else
+	#Both arguments given
+
+	fi
 }
 
 
