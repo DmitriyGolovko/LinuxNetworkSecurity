@@ -44,10 +44,9 @@ function display_help() {
 #If arg1=1 store the snap in snaps
 function create_snap() {
 	#Get all commands that are running
-	ps -e | egrep -o "(\w|[-:\/_\(\)])*$" 1> $WK/last_snap 2>> $DIR/error.log
-	WC=$(cat $WK/last_snap | wc -l)
-	cat $WK/last_snap | tail -$(expr $WC - 1) > $WK/last_snap
-	
+	ps ax | grep -o "[1234567890]:.*$" | cut -c 6- 1> $WK/last_snap 2>> $DIR/error.log
+	#WC=$(cat $WK/last_snap | wc -l)
+
 	if [ "$1" = "1" ]; then
 		cp $WK/last_snap $SNAPDIR/$DATE
 	fi 
