@@ -108,15 +108,36 @@ function view_snap() {
 #Find differene between 2 snap files given by arg1=id1, arg2=id2
 function find_difference() {
 	if [ "$1" = "" ]; then
-	#No arguments given
+		#No arguments given
+		list_snaps
+		LID=$(cat $WK/view | tail -1 | grep -o "^[1234567890]*") 
+		view_snap $LID 0 1
+		cp $WK/prev $WK/snap1
 
+		create_snap
+		cp $WK/last_snap $WK/snap2	
+		
 	elif [ "$2" = "" ]; then
-	#First argument given
+		#First argument given
+		view_snap $1 0
+		cp $WK/prev $WK/snap1
 
+		create_snap
+		cp $WK/last_snap $WK/snap2
 	else
-	#Both arguments given
+		#Both arguments given
+		view_snap $1 0
+		cp $WK/prev $WK/snap1
 
+		view_snap $2 0 1
+		cp $WK/prev $WK/snap2
 	fi
+
+	print_difference
+}
+
+function print_difference() {
+	echo v
 }
 
 
