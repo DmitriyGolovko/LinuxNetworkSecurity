@@ -40,12 +40,11 @@ function display_help() {
 	echo -e "diff [id1] [id2]\tCompare snaps from now to latest snap.\n\t\t\tIf first argument given only, compare date to current processes.\n\t\t\tIf both arguments are given, compare snaps of both dates."
 }
 
-#Create snapshot of processes
-#If arg1=1 store the snap in snaps
+#Create snapshot of processes.
+#If arg1=1 store the snap in snaps.
 function create_snap() {
-	#Get all commands that are running
+	#Get all commands that are running.
 	ps ax | grep -o "[0-9]:.*$" | cut -c 6- 1> $WK/last_snap 2>> $DIR/error.log
-	#WC=$(cat $WK/last_snap | wc -l)
 
 	if [ "$1" = "1" ]; then
 		cp $WK/last_snap $SNAPDIR/$DATE
@@ -66,7 +65,7 @@ function list_snaps() {
 
 		echo -e "$ID\t\c" >> $WK/view
 		echo -e "$(date -d "$FDATE")\t\c" >> $WK/view
-		echo -e "$(cat $SNAPDIR/$line | wc -l)" >> $WK/view
+		echo -e "$(cat $SNAPDIR/$line | wc --lines)" >> $WK/view
 
 		ID=$(expr $ID + 1)
 	done
@@ -78,9 +77,9 @@ function list_snaps() {
 
 #Read snap given by arg1=ID.
 #If arg2=1 then output to stdout.
-#If arg3=1 then don't invoke list_snaps to update $WK/view 
+#If arg3=1 then don't invoke list_snaps to update $WK/view. 
 function view_snap() {
-	#History will be stored in $DIR/view
+	#History will be stored in $DIR/view.
 	if [ ! "$3" = 1 ]; then
 		list_snaps
 	fi	
@@ -90,14 +89,14 @@ function view_snap() {
 		exit 1
 	fi
 	
-	LINE=$(cat $WK/view | grep "^$1")
+	LINE=$(grep "^$1" $WK/view)
 
 	if [ "$LINE" = "" ]; then
 		error_log "ID-Does-Not-Exist"
 		exit 1
 	fi
 	
-	#Read particular line using head | tail method
+	#Read particular line using head | tail method.
 	cat $SNAPDIR/$(ls $SNAPDIR | sort | head -$(expr $1 + 1) | tail -1) > $WK/prev
 	
 	if [ "$2" = "1" ]; then
@@ -105,12 +104,12 @@ function view_snap() {
 	fi
 }
 
-#Find differene between 2 snap files given by arg1=id1, arg2=id2
+#Find differene between 2 snap files given by arg1=id1, arg2=id2.
 function find_difference() {
 	if [ "$1" = "" ]; then
-		#No arguments given
+		#No arguments given.
 		list_snaps
-		LID=$(cat $WK/view | tail -1 | grep -o "^[0-9]*") 
+		LID=$(tail -1 $WK/view | grep -o "^[0-9]*") 
 		view_snap $LID 0 1
 		cp $WK/prev $WK/snap1
 
@@ -124,15 +123,17 @@ function find_difference() {
 		create_snap
 		cp $WK/last_snap $WK/snap2
 	else
-		#Both arguments given
+		#Both arguments given.
+		#Get both snaps from ID.
 		view_snap $1 0
 		cp $WK/prev $WK/snap1
 
 		view_snap $2 0 1
 		cp $WK/prev $WK/snap2
 	fi
-
-	diff --ignore-space-change $WK/snap1 $WK/snap2 | sed -E '/(^---|^[0-9])*/d'
+	
+	#Difference of both snaps and get rid of descriptive lines.
+	diff --ignore-space-change $WK/snap1 $WK/snap2 | sed -E '/(^---|^[0-9])/d'
 }
 
 
