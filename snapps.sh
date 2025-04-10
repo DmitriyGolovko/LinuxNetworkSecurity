@@ -49,7 +49,7 @@ function create_snap() {
 
 	if [ "$1" = "1" ]; then
 		cp $WK/last_snap $SNAPDIR/$DATE
-	fi 
+	fi
 }
 
 #Create a readable list of snaps with associated id and process count.
@@ -116,7 +116,6 @@ function find_difference() {
 
 		create_snap
 		cp $WK/last_snap $WK/snap2	
-		cat $WK/snap2 | head -3	
 	elif [ "$2" = "" ]; then
 		#First argument given
 		view_snap $1 0
@@ -133,26 +132,8 @@ function find_difference() {
 		cp $WK/prev $WK/snap2
 	fi
 
-	print_difference
+	diff --ignore-space-change $WK/snap1 $WK/snap2 | sed -E '/(^---|^[0-9])*/d'
 }
-
-function print_difference() {
-	cat $WK/snap1 | sort | uniq > $WK/snap1
-	cat $WK/snap2 | sort | uniq > $WK/snap2
-	
-	echo -n > $WK/killed
-	
-	cat $WK/snap1 | while IFS= read -r line; do
-		if [ "$(cat $WK/snap2 | sed 's/^\-/\\\-/g' | grep -F "$line")" = "" ]; then
-			echo $line
-			#echo $line >> $WK/killed
-			#NU="$(cat $WK/snap2 | grep -nF "$line" | grep -o "^[0123456789]*")"		
-		fi
-	done
-
-	#cat $WK/killed	
-}
-
 
 
 case $1 in
