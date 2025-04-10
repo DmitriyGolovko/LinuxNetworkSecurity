@@ -44,7 +44,7 @@ function display_help() {
 #If arg1=1 store the snap in snaps
 function create_snap() {
 	#Get all commands that are running
-	ps ax | grep -o "[1234567890]:.*$" | cut -c 6- 1> $WK/last_snap 2>> $DIR/error.log
+	ps ax | grep -o "[0-9]:.*$" | cut -c 6- 1> $WK/last_snap 2>> $DIR/error.log
 	#WC=$(cat $WK/last_snap | wc -l)
 
 	if [ "$1" = "1" ]; then
@@ -60,7 +60,7 @@ function list_snaps() {
 	echo -e "ID\tDate\t\t\t\tProcesses" >> $WK/view
 	ID=0
 
-	ls $SNAPDIR | grep -o "[1234567890]*" | sort | while IFS= read -r line; do
+	ls $SNAPDIR | grep -o "[0-9]*" | sort | while IFS= read -r line; do
 		#Formatting so the date command can interpreted.
 		FDATE=$(echo $line | sed "s/^\(.\{8\}\)/\1 /")
 
@@ -85,7 +85,7 @@ function view_snap() {
 		list_snaps
 	fi	
 
-	if [ "$(echo $1 | grep -o "[1234567890]*")" = "" ]; then
+	if [ "$(echo $1 | grep -o "[0-9]*")" = "" ]; then
 		error_log "Invalid-ID"
 		exit 1
 	fi
@@ -110,13 +110,13 @@ function find_difference() {
 	if [ "$1" = "" ]; then
 		#No arguments given
 		list_snaps
-		LID=$(cat $WK/view | tail -1 | grep -o "^[1234567890]*") 
+		LID=$(cat $WK/view | tail -1 | grep -o "^[0-9]*") 
 		view_snap $LID 0 1
 		cp $WK/prev $WK/snap1
 
 		create_snap
 		cp $WK/last_snap $WK/snap2	
-		
+		cat $WK/snap2 | head -3	
 	elif [ "$2" = "" ]; then
 		#First argument given
 		view_snap $1 0
@@ -137,7 +137,20 @@ function find_difference() {
 }
 
 function print_difference() {
-	echo v
+	cat $WK/snap1 | sort | uniq > $WK/snap1
+	cat $WK/snap2 | sort | uniq > $WK/snap2
+	
+	echo -n > $WK/killed
+	
+	cat $WK/snap1 | while IFS= read -r line; do
+		if [ "$(cat $WK/snap2 | sed 's/^\-/\\\-/g' | grep -F "$line")" = "" ]; then
+			echo $line
+			#echo $line >> $WK/killed
+			#NU="$(cat $WK/snap2 | grep -nF "$line" | grep -o "^[0123456789]*")"		
+		fi
+	done
+
+	#cat $WK/killed	
 }
 
 
