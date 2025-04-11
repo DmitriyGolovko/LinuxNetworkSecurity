@@ -17,29 +17,32 @@ MAX_ATTEMPTS=0
 ALLOWED_ATTEMPTS=5 #Allowed amount of login attempts from IP
 SINCE_DATE=""
 
-echo -e "Date since (type nothing for entire history) (Use format YYYY-MM-DD)"
-read SINCE_DATE
+function get_date() {
+	echo -e "Date since (type nothing for entire history) (Use format YYYY-MM-DD)"
+	read SINCE_DATE
 
-if [ "$SINCE_DATE" = "" ]; then
-        SINCE_DATE="2000-01-01"
-fi
+	if [ "$SINCE_DATE" = "" ]; then
+		SINCE_DATE="2000-01-01"
+	fi
+}
 
 if [ ! -d "/tmp/ip" ]; then
         mkdir /tmp/ip
 fi
 
-echo -e "Counting IPs of failed login attempts...\n"
+function count_ips() {
+		echo -e "Counting IPs of failed login attempts...\n"
 
-journalctl --since=$SINCE_DATE | grep "Failed" | grep -oE "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b" > $TMP_FILE
+		journalctl --since=$SINCE_DATE | grep "Failed" | grep -oE "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b" > $TMP_FILE
 
 
-echo "Attempts | IP"
-sort $TMP_FILE | uniq -c | sort -r > $COUNT_FILE
-cat $COUNT_FILE
+		echo "Attempts | IP"
+		sort $TMP_FILE | uniq -c | sort -r > $COUNT_FILE
+		cat $COUNT_FILE
 
-echo -e "\nTotal failed login attempts: \c"
-echo `wc -l $TMP_FILE | grep -oE "[0-9]+"`
-
+		echo -e "\nTotal failed login attempts: \c"
+		echo `wc -l $TMP_FILE | grep -oE "[0-9]+"`
+}
 #Ban the IP address using access control see man hosts_access(5)
 #One argument: IP address to ban
 function ban_ip() {
@@ -82,5 +85,19 @@ cat $COUNT_FILE | while IFS= read -r line; do
         fi
 done
 
-#echo -e "\n*****READING FILE /etc/hosts.deny*****"
-#cat /etc/hosts.deny
+
+case $1 in
+"help" | "HELP" )
+	display_help
+	;;
+"count" | "COUNT" )
+	get_date
+	count_ips
+	;;
+"ban" | "BAN" )
+	get_date
+	ban_ips
+	;;
+* )
+	printf "Invalid Command"
+	display_help
