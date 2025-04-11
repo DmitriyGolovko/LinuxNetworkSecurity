@@ -59,7 +59,7 @@ function ban_ip() {
 echo ""
 
 
-if [ ! [ -w /etc/hosts.deny -o -r /etc/hosts.deny ] ]; then
+if [ ! -w /etc/hosts.deny -o ! -r /etc/hosts.deny  ]; then
         echo -e "***Don't have permissions for access control***"
         echo "Set /etc/hosts.deny READ & WRITE permissions"
         exit 1
