@@ -22,7 +22,11 @@ if [ ! -d "/tmp/ip" ]; then
 fi
 
 function display_help() {
-	echo "Figure it out.".
+	echo -e "Usage: banips command [date]\n"
+	echo -e "Commands"
+	echo -e "help\t\tDisplays this help message."
+	echo -e "count [date]\tCounts total login attempts since date. If no date specified then count all."
+	echo -e "ban [date]\tBan all IPs since date. Will be prompted to give maximum allowed login attempts."
 }
 
 function get_date() {
