@@ -22,7 +22,8 @@ if [ ! -d "/tmp/ip" ]; then
 fi
 
 function display_help() {
-	echo -e "Usage: banips command [date]\n"
+	echo -e "Usage: banips command [date]"
+	echo -e "Date may be entered in format that 'date -d' allows. E.g. 'April 4, 2025'\n"
 	echo -e "Commands"
 	echo -e "help\t\tDisplays this help message."
 	echo -e "count [date]\tCounts total login attempts since date. If no date specified then count all."
@@ -111,7 +112,7 @@ case $1 in
 	ban_all_ips
 	;;
 * )
-	printf "Invalid Command"
+	printf "Invalid Command\n"
 	display_help
 	;;
 esac
